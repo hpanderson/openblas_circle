@@ -14,7 +14,7 @@
   </target>
 
   <target name="build-openblas" depends="init">
-    <mkdir dir="openblas.source.dir" />
+    <mkdir dir="${openblas.source.dir}" />
     <get src="${openblas.url}" dest="${openblas.source.dir}/${openblas.archive}" usetimestamp="true" />
     <checksum file="${openblas.source.dir}/${openblas.archive}" property="${openblas.md5}" verifyProperty="md5.ok" />
     <fail message="openblas archive didn't match expected md5 hash ${openblas.md5}">
