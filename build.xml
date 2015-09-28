@@ -3,16 +3,41 @@
 
   <target name="init">
     <tstamp />
-    <property name="openblas.dir" value="../openblas" />
+    <property name="openblas.install.dir" value="${basedir}../openblas" />
+    <property name="openblas.ver" value="2.14" />
+    <property name="openblas.archive" value="v0.${openblas.ver}.tar.gz" />
+    <property name="openblas.url" value="http://github.com/xianyi/OpenBLAS/archive/${openblas.archive}" />
+    <property name="openblas.md5" value="53cda7f420e1ba0ea55de536b24c9701" />
+    <property name="openblas.source.dir" value="${basedir}/openblas_src" />
     <property name="test.bin" value="openblas_circle" />
     <mkdir dir="bin" />
+  </target>
+
+  <target name="build-openblas" depends="init">
+    <mkdir dir="openblas.source.dir" />
+    <get src="${openblas.url}" dest="${openblas.source.dir}/${openblas.archive}" usetimestamp="true" />
+    <checksum file="${openblas.source.dir}/${openblas.archive}" property="${openblas.md5}" verifyProperty="md5.ok" />
+    <fail message="openblas archive didn't match expected md5 hash ${openblas.md5}">
+      <condition><isfalse value="${md5.ok}" /></condition>
+    </fail>
+
+    <untar src="${openblas.source.dir}/${openblas.archive}" dest="${openblas.source.dir}" compression="gzip" />
+
+    <exec dir="${openblas.source.dir}/OpenBLAS-0.${openblas.ver}" executable="make">
+    </exec>
+
+    <exec dir="${openblas.source.dir}/OpenBLAS-0.${openblas.ver}" executable="make">
+      <arg line="install" />
+      <arg line="PREFIX=${openblas.install.dir}" />
+    </exec>
+
   </target>
 
   <target name="build" depends="init">
     <exec executable="g++">
       <arg line="openblas_circle.cpp" />
-      <arg line="-I${openblas.dir}/include" />
-      <arg line="-L${openblas.dir}/lib" />
+      <arg line="-I${openblas.install.dir}/include" />
+      <arg line="-L${openblas.install.dir}/lib" />
       <arg line="-lopenblas" />
       <arg line="-std=c++11" />
       <arg line="-o bin/${test.bin}" />
@@ -21,7 +46,7 @@
 
   <target name="speed-test" description="Run a speed test." depends="build">
     <exec dir="${basedir}" executable="bin/${test.bin}">
-      <env key="LD_LIBRARY_PATH" value="${openblas.dir}/lib" />
+      <env key="LD_LIBRARY_PATH" value="${openblas.install.dir}/lib" />
     </exec>
   </target>
 </project>

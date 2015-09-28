@@ -10,3 +10,7 @@ dependencies:
     - sudo update-alternatives --config gcc
     - sudo update-alternatives --config g++
     - sudo update-alternatives --config gfortran
+    - ant build-openblas
+
+  cache_directories:
+    - ~/openblas
