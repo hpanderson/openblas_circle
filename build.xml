@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="openblas_circle" default="speed-test" basedir=".">
+
+  <target name="init">
+    <tstamp />
+    <property name="openblas.dir" value="../openblas" />
+    <property name="test.bin" value="openblas_circle" />
+    <mkdir dir="bin" />
+  </target>
+
+  <target name="build" depends="init">
+    <exec executable="g++">
+      <arg line="openblas_circle.cpp" />
+      <arg line="-I${openblas.dir}/include" />
+      <arg line="-L${openblas.dir}/lib" />
+      <arg line="-lopenblas" />
+      <arg line="-std=c++11" />
+      <arg line="-o bin/${test.bin}" />
+    </exec>
+  </target>
+
+  <target name="speed-test" description="Run a speed test." depends="build">
+    <exec dir="${basedir}" executable="bin/${test.bin}">
+      <env key="LD_LIBRARY_PATH" value="${openblas.dir}/lib" />
+    </exec>
+  </target>
+</project>
