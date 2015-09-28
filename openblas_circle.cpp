@@ -14,9 +14,10 @@ using namespace std::chrono;
 /**
  * Calls the getrf/getri lapack routines to invert a matrix of doubles. With threading enabled this takes ~2000 times longer than without (12s vs 5ms).
  */
-void invert_in_place(double* A, int m, int n)
+void invert_in_place(double* A, int m, int n, bool verbose = true)
 {
-	std::cout << "inverting " << m << "x"<< n << " matrix using dgetrf/dgetri" << std::endl;
+	if (verbose)
+		std::cout << "inverting " << m << "x"<< n << " matrix using dgetrf/dgetri" << std::endl;
 
 	int lda = m;
 	int lwork = 3 * std::max(1, n + n);
@@ -39,10 +40,29 @@ void fill_rand(double* A, int m, int n)
 		A[i] = dis(gen);
 }
 
+int invert_random_matrix(int mat_size, bool verbose = true)
+{
+	std::vector<double> test_matrix(mat_size*mat_size);
+
+	fill_rand(test_matrix.data(), mat_size, mat_size);
+
+	high_resolution_clock::time_point start = high_resolution_clock::now();
+
+	invert_in_place(test_matrix.data(), mat_size, mat_size, verbose);
+
+	auto invert_time = high_resolution_clock::now() - start;
+	auto us = duration_cast<microseconds>(invert_time).count();
+
+	if (verbose)
+		std::cout << "elapsed time " << us << "us" << std::endl;
+
+	return us;
+}
+
 /**
- * Uses Jakob Progsch's ThreadPool implementation to invert a matrix in several threads, which triggers a segfault when run on a circleci container..
+ * Uses Jakob Progsch's ThreadPool implementation to invert a matrix in several threads, which triggers a segfault when run on a circleci container.
  */
-void threaded_invert()
+void threaded_invert(int mat_size)
 {
 	std::list<std::future<int>> results;
 	int thread_count = 7;
@@ -50,17 +70,10 @@ void threaded_invert()
 
 	for (int i = 0; i < thread_count; ++i)
 	{
-		results.emplace_back(pool.enqueue([]() -> int
+		results.emplace_back(pool.enqueue([](int mat_size) -> int
 		{
-			int mat_size = 256;
-			std::vector<double> test_matrix(mat_size*mat_size);
-			fill_rand(test_matrix.data(), mat_size, mat_size);
-
-			high_resolution_clock::time_point start = high_resolution_clock::now();
-			invert_in_place(test_matrix.data(), mat_size, mat_size);
-			auto invert_time = high_resolution_clock::now() - start;
-			return duration_cast<microseconds>(invert_time).count();
-		}));
+			return invert_random_matrix(mat_size, false);
+		}, mat_size));
 	}
 
 
@@ -74,22 +87,13 @@ void threaded_invert()
 int main(int argc, char* argv[])
 {
 	int mat_size = 256;
-
-	std::vector<double> test_matrix(mat_size*mat_size);
-
-	fill_rand(test_matrix.data(), mat_size, mat_size);
-
-	high_resolution_clock::time_point start = high_resolution_clock::now();
-
-	invert_in_place(test_matrix.data(), mat_size, mat_size);
-
-	auto invert_time = high_resolution_clock::now() - start;
-	auto us = duration_cast<microseconds>(invert_time).count();
-	std::cout << "elapsed time " << us << "us" << std::endl;
+	invert_random_matrix(mat_size);
 
 	std::cout << "changing openblas thread count from " << openblas_get_num_threads() << " to 1" << std::endl;
 	openblas_set_num_threads(1);
 
-	threaded_invert();
+	invert_random_matrix(mat_size);
+
+	threaded_invert(mat_size);
 }
 
