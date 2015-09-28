@@ -1,4 +1,5 @@
 #include "lapacke.h"
+#include "cblas.h"
 #include "external/ThreadPool.h"
 
 #include <vector>
@@ -85,6 +86,9 @@ int main(int argc, char* argv[])
 	auto invert_time = high_resolution_clock::now() - start;
 	auto us = duration_cast<microseconds>(invert_time).count();
 	std::cout << "elapsed time " << us << "us" << std::endl;
+
+	std::cout << "changing openblas thread count from " << openblas_get_num_threads() << " to 1" << std::endl;
+	openblas_set_num_threads(1);
 
 	threaded_invert();
 }
