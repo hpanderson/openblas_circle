@@ -3,37 +3,51 @@
 
   <target name="init">
     <tstamp />
-    <property name="openblas.install.dir" value="${basedir}../openblas" />
+    <property name="external.dir" value="${basedir}/external" />
+    <property name="openblas.install.dir" value="${basedir}/../openblas" />
     <property name="openblas.ver" value="2.14" />
     <property name="openblas.archive" value="v0.${openblas.ver}.tar.gz" />
     <property name="openblas.url" value="http://github.com/xianyi/OpenBLAS/archive/${openblas.archive}" />
     <property name="openblas.md5" value="53cda7f420e1ba0ea55de536b24c9701" />
-    <property name="openblas.source.dir" value="${basedir}/openblas_src" />
+    <property name="openblas.source.dir" value="${basedir}/external/OpenBLAS-0.${openblas.ver}" />
+
+    <property name="threadpool.url" value="https://raw.githubusercontent.com/progschj/ThreadPool/9a42ec1329f259a5f4881a291db1dcb8f2ad9040/ThreadPool.h" />
+    <property name="threadpool.md5" value="c4827cf0f3df803a10278c82d1d7ccbb" />
+
     <property name="test.bin" value="openblas_circle" />
     <mkdir dir="bin" />
   </target>
 
   <target name="build-openblas" depends="init">
-    <mkdir dir="${openblas.source.dir}" />
-    <get src="${openblas.url}" dest="${openblas.source.dir}/${openblas.archive}" usetimestamp="true" />
-    <checksum file="${openblas.source.dir}/${openblas.archive}" property="${openblas.md5}" verifyProperty="md5.ok" />
+    <mkdir dir="${external.dir}" />
+    <get src="${openblas.url}" dest="${external.dir}/${openblas.archive}" usetimestamp="true" />
+    <checksum file="${external.dir}/${openblas.archive}" property="${openblas.md5}" verifyProperty="md5.ok" />
     <fail message="openblas archive didn't match expected md5 hash ${openblas.md5}">
       <condition><isfalse value="${md5.ok}" /></condition>
     </fail>
 
-    <untar src="${openblas.source.dir}/${openblas.archive}" dest="${openblas.source.dir}" compression="gzip" />
+    <untar src="${external.dir}/${openblas.archive}" dest="${external.dir}" compression="gzip" />
 
-    <exec dir="${openblas.source.dir}/OpenBLAS-0.${openblas.ver}" executable="make">
+    <exec dir="${openblas.source.dir}" executable="make">
     </exec>
 
-    <exec dir="${openblas.source.dir}/OpenBLAS-0.${openblas.ver}" executable="make">
+    <exec dir="${openblas.source.dir}" executable="make">
       <arg line="install" />
       <arg line="PREFIX=${openblas.install.dir}" />
     </exec>
 
   </target>
 
-  <target name="build" depends="init">
+  <target name="fetch-thread-pool" depends="init">
+    <mkdir dir="${external.dir}" />
+    <get src="${threadpool.url}" dest="${external.dir}/ThreadPool.h" usetimestamp="true" />
+    <checksum file="${external.dir}/ThreadPool.h" property="${threadpool.md5}" verifyProperty="md5.ok" />
+    <fail message="ThreadPool header didn't match expected md5 hash ${threadpool.md5}">
+      <condition><isfalse value="${md5.ok}" /></condition>
+    </fail>
+  </target>
+
+  <target name="build" depends="init,fetch-thread-pool">
     <exec executable="g++">
       <arg line="openblas_circle.cpp" />
       <arg line="-I${openblas.install.dir}/include" />
@@ -45,7 +59,7 @@
   </target>
 
   <target name="speed-test" description="Run a speed test." depends="build">
-    <exec dir="${basedir}" executable="bin/${test.bin}">
+    <exec dir="${basedir}" executable="bin/${test.bin}" failonerror="true">
       <env key="LD_LIBRARY_PATH" value="${openblas.install.dir}/lib" />
     </exec>
   </target>
