@@ -4,7 +4,7 @@
   <target name="init">
     <tstamp />
     <property name="external.dir" value="${basedir}/external" />
-    <property name="openblas.install.dir" value="${basedir}/../openblas" />
+    <property name="openblas.install.dir" value="${external.dir}/install/openblas" />
     <property name="openblas.ver" value="2.14" />
     <property name="openblas.archive" value="v0.${openblas.ver}.tar.gz" />
     <property name="openblas.url" value="http://github.com/xianyi/OpenBLAS/archive/${openblas.archive}" />
@@ -15,10 +15,17 @@
     <property name="threadpool.md5" value="c4827cf0f3df803a10278c82d1d7ccbb" />
 
     <property name="test.bin" value="openblas_circle" />
+
     <mkdir dir="bin" />
+    <mkdir dir="${external.dir}" />
+    <mkdir dir="${openblas.install.dir}" />
   </target>
 
-  <target name="build-openblas" depends="init">
+  <target name="check-openblas" depends="init">
+    <available file="${openblas.install.dir}/lib/libopenblas.a" property="openblas.built" />
+  </target>
+
+  <target name="build-openblas" depends="init,check-openblas" unless="openblas.built">
     <mkdir dir="${external.dir}" />
     <get src="${openblas.url}" dest="${external.dir}/${openblas.archive}" usetimestamp="true" />
     <checksum file="${external.dir}/${openblas.archive}" property="${openblas.md5}" verifyProperty="md5.ok" />
@@ -28,9 +35,7 @@
 
     <untar src="${external.dir}/${openblas.archive}" dest="${external.dir}" compression="gzip" />
 
-    <exec dir="${openblas.source.dir}" executable="make">
-    </exec>
-
+    <exec dir="${openblas.source.dir}" executable="make" />
     <exec dir="${openblas.source.dir}" executable="make">
       <arg line="install" />
       <arg line="PREFIX=${openblas.install.dir}" />

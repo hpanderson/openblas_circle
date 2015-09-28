@@ -13,4 +13,4 @@ dependencies:
     - ant build-openblas
 
   cache_directories:
-    - ~/openblas
+    - ~/openblas_circle/external/install
