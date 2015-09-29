@@ -35,7 +35,9 @@
 
     <untar src="${external.dir}/${openblas.archive}" dest="${external.dir}" compression="gzip" />
 
-    <exec dir="${openblas.source.dir}" executable="make" />
+    <exec dir="${openblas.source.dir}" executable="make">
+      <arg line="NUM_THREADS=8" />
+    </exec>
     <exec dir="${openblas.source.dir}" executable="make">
       <arg line="install" />
       <arg line="PREFIX=${openblas.install.dir}" />
