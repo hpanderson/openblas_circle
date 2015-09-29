@@ -8,6 +8,9 @@
 #include <iostream>
 #include <list>
 
+#include <sys/sysinfo.h>
+#include <unistd.h>
+
 using namespace std::chrono;
 
 
@@ -86,6 +89,11 @@ void threaded_invert(int mat_size)
 
 int main(int argc, char* argv[])
 {
+	std::cout << "openblas configured with " << openblas_get_num_threads() << " threads" << std::endl;
+	std::cout << "c++11 reports " << std::thread::hardware_concurrency() << " threads" << std::endl;
+	std::cout << "sysconf reports " << sysconf(_SC_NPROCESSORS_ONLN) << " processors" << std::endl;
+	std::cout << "get_nprocs reports " << get_nprocs() << " processors" << std::endl;
+
 	int mat_size = 256;
 	invert_random_matrix(mat_size);
 
