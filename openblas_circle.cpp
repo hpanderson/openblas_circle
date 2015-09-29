@@ -68,10 +68,13 @@ int invert_random_matrix(int mat_size, bool verbose = true)
 void threaded_invert(int mat_size)
 {
 	std::list<std::future<int>> results;
-	int thread_count = 7;
+	int thread_count = (int)std::thread::hardware_concurrency();
+	int task_count = 8;
 	ThreadPool pool(thread_count);
 
-	for (int i = 0; i < thread_count; ++i)
+	std::cout << "inverting " << task_count << " matrices on " << thread_count << " threads" << std::endl;
+
+	for (int i = 0; i < task_count; ++i)
 	{
 		results.emplace_back(pool.enqueue([](int mat_size) -> int
 		{
